@@ -1,3 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/genricRepository.slnx
+/genricRepository
 # Build results
 bin/
 obj/
