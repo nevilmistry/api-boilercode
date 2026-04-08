@@ -1,0 +1,6 @@
+@GenricRepository.Presentation_HostAddress = http://localhost:5062
+
+GET {{GenricRepository.Presentation_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
