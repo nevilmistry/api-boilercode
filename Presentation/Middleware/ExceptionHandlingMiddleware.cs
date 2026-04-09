@@ -63,6 +63,7 @@ public sealed class ExceptionHandlingMiddleware
         };
 
         problemDetails.Extensions["traceId"] = Activity.Current?.Id ?? context.TraceIdentifier;
+        problemDetails.Extensions["correlationId"] = context.TraceIdentifier;
 
         await _problemDetailsService.WriteAsync(new ProblemDetailsContext
         {
