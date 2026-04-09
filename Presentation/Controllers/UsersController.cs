@@ -9,6 +9,9 @@ namespace GenricRepository.Presentation.Controllers;
 [Route("api/[controller]")]
 public sealed class UsersController : ControllerBase
 {
+    private const string EntityName = "User";
+    private const string EntityPluralName = "Users";
+
     private readonly IUserQueryHandler _userQueryHandler;
     private readonly IUserCommandHandler _userCommandHandler;
 
@@ -19,35 +22,46 @@ public sealed class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<UserResponse>>> GetAll([FromQuery] UsersListQuery query)
+    public async Task<ActionResult<ApiEnvelope<PagedResult<UserResponse>>>> GetAll([FromQuery] UsersListQuery query)
     {
-        return Ok(await _userQueryHandler.GetAllAsync(query));
+        var users = await _userQueryHandler.GetAllAsync(query);
+        return Ok(ApiEnvelope.Ok(users, CommonMessages.ListFetched(EntityPluralName)));
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<UserResponse>> GetById(Guid id)
+    public async Task<ActionResult<ApiEnvelope<UserResponse>>> GetById(Guid id)
     {
         var user = await _userQueryHandler.GetByIdAsync(id);
-        return user is null ? NotFound() : Ok(user);
+        return user is null
+            ? NotFound(ApiEnvelope.NotFound(CommonMessages.NotFound(EntityName)))
+            : Ok(ApiEnvelope.Ok(user, CommonMessages.Fetched(EntityName)));
     }
 
     [HttpPost]
-    public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request)
+    public async Task<ActionResult<ApiEnvelope<UserResponse>>> Create(CreateUserRequest request)
     {
         var user = await _userCommandHandler.CreateAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        var response = ApiEnvelope.Created(user, CommonMessages.Created(EntityName));
+        return CreatedAtAction(nameof(GetById), new { id = user.Id }, response);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<UserResponse>> Update(Guid id, UpdateUserRequest request)
+    public async Task<ActionResult<ApiEnvelope<UserResponse>>> Update(Guid id, UpdateUserRequest request)
     {
         var user = await _userCommandHandler.UpdateAsync(id, request);
-        return user is null ? NotFound() : Ok(user);
+        return user is null
+            ? NotFound(ApiEnvelope.NotFound(CommonMessages.NotFound(EntityName)))
+            : Ok(ApiEnvelope.Ok(user, CommonMessages.Updated(EntityName)));
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<ActionResult<ApiEnvelope<object?>>> Delete(Guid id)
     {
-        return await _userCommandHandler.DeleteAsync(id) ? NoContent() : NotFound();
+        if (!await _userCommandHandler.DeleteAsync(id))
+        {
+            return NotFound(ApiEnvelope.NotFound(CommonMessages.NotFound(EntityName)));
+        }
+
+        return Ok(ApiEnvelope.SuccessMessage(CommonMessages.Deleted(EntityName)));
     }
 }

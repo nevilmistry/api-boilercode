@@ -9,6 +9,9 @@ namespace GenricRepository.Presentation.Controllers;
 [Route("api/[controller]")]
 public sealed class RolesController : ControllerBase
 {
+    private const string EntityName = "Role";
+    private const string EntityPluralName = "Roles";
+
     private readonly IRoleQueryHandler _roleQueryHandler;
     private readonly IRoleCommandHandler _roleCommandHandler;
 
@@ -19,35 +22,46 @@ public sealed class RolesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<RoleResponse>>> GetAll([FromQuery] RolesListQuery query)
+    public async Task<ActionResult<ApiEnvelope<PagedResult<RoleResponse>>>> GetAll([FromQuery] RolesListQuery query)
     {
-        return Ok(await _roleQueryHandler.GetAllAsync(query));
+        var roles = await _roleQueryHandler.GetAllAsync(query);
+        return Ok(ApiEnvelope.Ok(roles, CommonMessages.ListFetched(EntityPluralName)));
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<RoleResponse>> GetById(Guid id)
+    public async Task<ActionResult<ApiEnvelope<RoleResponse>>> GetById(Guid id)
     {
         var role = await _roleQueryHandler.GetByIdAsync(id);
-        return role is null ? NotFound() : Ok(role);
+        return role is null
+            ? NotFound(ApiEnvelope.NotFound(CommonMessages.NotFound(EntityName)))
+            : Ok(ApiEnvelope.Ok(role, CommonMessages.Fetched(EntityName)));
     }
 
     [HttpPost]
-    public async Task<ActionResult<RoleResponse>> Create(CreateRoleRequest request)
+    public async Task<ActionResult<ApiEnvelope<RoleResponse>>> Create(CreateRoleRequest request)
     {
         var role = await _roleCommandHandler.CreateAsync(request);
-        return CreatedAtAction(nameof(GetById), new { id = role.Id }, role);
+        var response = ApiEnvelope.Created(role, CommonMessages.Created(EntityName));
+        return CreatedAtAction(nameof(GetById), new { id = role.Id }, response);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<ActionResult<RoleResponse>> Update(Guid id, UpdateRoleRequest request)
+    public async Task<ActionResult<ApiEnvelope<RoleResponse>>> Update(Guid id, UpdateRoleRequest request)
     {
         var role = await _roleCommandHandler.UpdateAsync(id, request);
-        return role is null ? NotFound() : Ok(role);
+        return role is null
+            ? NotFound(ApiEnvelope.NotFound(CommonMessages.NotFound(EntityName)))
+            : Ok(ApiEnvelope.Ok(role, CommonMessages.Updated(EntityName)));
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id)
+    public async Task<ActionResult<ApiEnvelope<object?>>> Delete(Guid id)
     {
-        return await _roleCommandHandler.DeleteAsync(id) ? NoContent() : NotFound();
+        if (!await _roleCommandHandler.DeleteAsync(id))
+        {
+            return NotFound(ApiEnvelope.NotFound(CommonMessages.NotFound(EntityName)));
+        }
+
+        return Ok(ApiEnvelope.SuccessMessage(CommonMessages.Deleted(EntityName)));
     }
 }
