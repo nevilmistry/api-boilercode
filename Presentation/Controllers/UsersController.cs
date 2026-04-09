@@ -31,29 +31,15 @@ public sealed class UsersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<UserResponse>> Create(CreateUserRequest request)
     {
-        try
-        {
-            var user = await _userService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var user = await _userService.CreateAsync(request);
+        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
     }
 
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<UserResponse>> Update(Guid id, UpdateUserRequest request)
     {
-        try
-        {
-            var user = await _userService.UpdateAsync(id, request);
-            return user is null ? NotFound() : Ok(user);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var user = await _userService.UpdateAsync(id, request);
+        return user is null ? NotFound() : Ok(user);
     }
 
     [HttpDelete("{id:guid}")]
