@@ -1,3 +1,4 @@
+using FluentValidation.AspNetCore;
 using GenricRepository.Application;
 using GenricRepository.Infrastructure;
 using GenricRepository.Infrastructure.Persistence;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

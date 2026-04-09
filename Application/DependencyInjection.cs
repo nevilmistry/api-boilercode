@@ -1,3 +1,4 @@
+using FluentValidation;
 using GenricRepository.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +10,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddValidatorsFromAssemblyContaining<DependencyInjection>();
         return services;
     }
 }
